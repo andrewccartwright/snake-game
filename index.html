@@ -1,3 +1,9 @@
+<!--
+  Created by: Andrew Hatch
+  Some help from https://www.educative.io/blog/javascript-snake-game-tutorial
+  Date: 05/24/2021
+-->
+
 <!DOCTYPE html>
 
 <html>
@@ -5,6 +11,7 @@
     <title>Snake Game</title>
     <link rel="stylesheet" href="index.css">
 
+    <!-- Imported packages (Bootstrap, jQuery) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js" integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
@@ -17,8 +24,6 @@
 
   <body>
     <h1 id="title" class="text-center mt-2">Snake Game</h1>
-
-
 
     <canvas id="playing-field" width="500" height="500"></canvas>
 
@@ -34,45 +39,68 @@
   </body>
 
   <script>
+    //canvas for gameboard
     const gameBoard = document.getElementById('playing-field');
+
+    //canvas context
     const gameBoard_ctx = gameBoard.getContext('2d');
+
+    //variable declarations
     let intervals = [];
     let snake = [];
     let score = 0;
     let food = {x: 0, y: 0};
     let ateFood = false;
     let speed = 100;
+    const maxSpeed = 50;
 
     //left, right, down, up
     let dirs = [0,0,0,0];
 
-
     startGame();
 
     function startGame() {
+      //temporary solution for setTimeout not resetting
       if(intervals.length !== 0) {
         window.location.reload();
       }
-      intervals = [];
+      clearTimers();
+
+      //hide game over popup
       $('#game-over-popup').css('visibility', 'hidden');
+
       score = 0;
 
+      //randomly choose initial position for snake head
       let xPosHead = Math.floor((Math.random() * 450 + 20) / 10) * 10;
       let yPosHead = Math.floor((Math.random() * 450 + 20) / 10) * 10;
 
+      //add to the snake array
       snake.unshift({x: xPosHead, y: yPosHead});
 
+      //call drawing methods
       drawSnake();
       drawFood();
+
+      //add event listener for arrow keys
       window.addEventListener('keydown', moveSnake);
 
     }
 
-
+    //calls the drawSnakeSquare method for each square of the snake
     function drawSnake() {
       snake.forEach(drawSnakeSquare);
     }
 
+    //draws each part of the snake
+    function drawSnakeSquare(snakeSquare) {
+      gameBoard_ctx.fillStyle = 'black';
+      gameBoard_ctx.strokeStyle = 'black';
+      gameBoard_ctx.fillRect(snakeSquare.x, snakeSquare.y, 10, 10);
+      gameBoard_ctx.strokeRect(snakeSquare.x, snakeSquare.y, 10, 10);
+    }
+
+    //tests whether the snake runs into itself
     function detectCollision() {
       for(let i = 1; i < snake.length; i++) {
         if(snake[0].x === snake[i].x && snake[0].y === snake[i].y) {
@@ -81,13 +109,7 @@
       }
     }
 
-    function drawSnakeSquare(snakeSquare) {
-      gameBoard_ctx.fillStyle = 'black';
-      gameBoard_ctx.strokeStyle = 'black';
-      gameBoard_ctx.fillRect(snakeSquare.x, snakeSquare.y, 10, 10);
-      gameBoard_ctx.strokeRect(snakeSquare.x, snakeSquare.y, 10, 10);
-    }
-
+    //chooses a random location to place the food
     function drawFood() {
       gameBoard_ctx.fillStyle = 'red';
       gameBoard_ctx.strokeStyle = 'red';
@@ -100,6 +122,7 @@
 
     }
 
+    //when the clearCanvas method is called, the food is erased, so this method redraws it in the same spot
     function redrawFood() {
       gameBoard_ctx.fillStyle = 'red';
       gameBoard_ctx.strokeStyle = 'red';
@@ -108,14 +131,20 @@
       gameBoard_ctx.strokeRect(food.x, food.y, 10, 10);
     }
 
+    //if the snake head is in the same position as the food, the snake grows and the food moves to another location
     function eatFood() {
       if(snake.length > 0) {
         if(snake[0].x === food.x && snake[0].y === food.y) {
           score++;
+
+          //update score
           document.getElementById('score-span').textContent = score;
           drawFood();
+
           ateFood = true;
-          if(score % 10 === 0) {
+
+          //speed increases until it reaches the max speed
+          if(score % 10 === 0 && speed > maxSpeed) {
             speed -= 10;
           }
         }
@@ -131,6 +160,7 @@
       let dx = 0;
       let dy = 0;
 
+      //testing boundaries
       if(snake.length > 0) {
         if(snake[0].x < 0 || snake[0].y < 0 || snake[0].x > gameBoard.width - 10 || snake[0].y > gameBoard.height - 10) {
           endGame();
@@ -141,6 +171,7 @@
 
       detectCollision();
 
+      //the snake cannot suddenly go in the opposite direction. For example, if the snake is moving right, it cannot immediately go left. It has to go up or down first.
       switch(event.keyCode) {
         case 37: //left
           if(!dirs[1]) {
@@ -178,18 +209,25 @@
             dy = 10;
           }
           break;
+
+        //When a key other than an arrow key is pressed, nothing happens
         default:
           return;
       }
 
+      //grow the snake
       if(snake.length > 0) {
         const head = {x: snake[0].x + dx, y: snake[0].y + dy};
         snake.unshift(head);
+
+        //the snake only grows if it eats the food. Otherwise, the last element in the snake array is removed
         if(!ateFood) {
           snake.pop();
         }
       }
 
+
+      //reset the timers so that the snake is only moving in one direction at a time
       clearTimers();
 
       intervals = intervals.concat(setTimeout(moveSnake, speed, event));
@@ -199,17 +237,26 @@
 
     }
 
+    //game over
     function endGame() {
+
+      //display final score
       document.getElementById('final-score').textContent = score;
+
+      //clear the canvas
       gameBoard_ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
       clearTimers();
+
+      //reset variables
       snake = [];
       score = 0;
 
+      //display gave over message
       $('#game-over-popup').css('visibility', 'visible');
 
     }
 
+    //clearTimeout for every timer in the intervals array
     function clearTimers() {
       for(let x = 0; x < intervals.length; x++) {
         clearTimeout(intervals[x]);

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Snake Game</title>
+    <link rel="stylesheet" href="index.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.0/jquery.min.js" integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ=" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+    <link href="https://netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"/>
+
+  </head>
+
+  <body>
+    <h1 id="title" class="text-center mt-2">Snake Game</h1>
+
+
+
+    <canvas id="playing-field" width="500" height="500"></canvas>
+
+    <p id="score-display" class="text-center mt-3"><b>Score: <span id="score-span">0</span></b></p>
+    <p class="text-center">For every 10 points you gain, the snake will get a little bit faster!</p>
+
+    <div id="game-over-popup">
+      <div id="game-over" class="text-center">
+        <p id="game-over-message">You lost! Your score was: <span id="final-score"></span></p>
+        <button id="reset-button" class="btn btn-danger" onClick="startGame()">Play Again</button>
+      </div>
+    </div>
+  </body>
+
+  <script>
+    const gameBoard = document.getElementById('playing-field');
+    const gameBoard_ctx = gameBoard.getContext('2d');
+    let intervals = [];
+    let snake = [];
+    let score = 0;
+    let food = {x: 0, y: 0};
+    let ateFood = false;
+    let speed = 100;
+
+    //left, right, down, up
+    let dirs = [0,0,0,0];
+
+
+    startGame();
+
+    function startGame() {
+      if(intervals.length !== 0) {
+        window.location.reload();
+      }
+      intervals = [];
+      $('#game-over-popup').css('visibility', 'hidden');
+      score = 0;
+
+      let xPosHead = Math.floor((Math.random() * 450 + 20) / 10) * 10;
+      let yPosHead = Math.floor((Math.random() * 450 + 20) / 10) * 10;
+
+      snake.unshift({x: xPosHead, y: yPosHead});
+
+      drawSnake();
+      drawFood();
+      window.addEventListener('keydown', moveSnake);
+
+    }
+
+
+    function drawSnake() {
+      snake.forEach(drawSnakeSquare);
+    }
+
+    function detectCollision() {
+      for(let i = 1; i < snake.length; i++) {
+        if(snake[0].x === snake[i].x && snake[0].y === snake[i].y) {
+          endGame();
+        }
+      }
+    }
+
+    function drawSnakeSquare(snakeSquare) {
+      gameBoard_ctx.fillStyle = 'black';
+      gameBoard_ctx.strokeStyle = 'black';
+      gameBoard_ctx.fillRect(snakeSquare.x, snakeSquare.y, 10, 10);
+      gameBoard_ctx.strokeRect(snakeSquare.x, snakeSquare.y, 10, 10);
+    }
+
+    function drawFood() {
+      gameBoard_ctx.fillStyle = 'red';
+      gameBoard_ctx.strokeStyle = 'red';
+
+      food.x = Math.floor((Math.random() * 450 + 20) / 10) * 10;
+      food.y = Math.floor((Math.random() * 450 + 20) / 10) * 10;
+
+      gameBoard_ctx.fillRect(food.x, food.y, 10, 10);
+      gameBoard_ctx.strokeRect(food.x, food.y, 10, 10);
+
+    }
+
+    function redrawFood() {
+      gameBoard_ctx.fillStyle = 'red';
+      gameBoard_ctx.strokeStyle = 'red';
+
+      gameBoard_ctx.fillRect(food.x, food.y, 10, 10);
+      gameBoard_ctx.strokeRect(food.x, food.y, 10, 10);
+    }
+
+    function eatFood() {
+      if(snake.length > 0) {
+        if(snake[0].x === food.x && snake[0].y === food.y) {
+          score++;
+          document.getElementById('score-span').textContent = score;
+          drawFood();
+          ateFood = true;
+          if(score % 10 === 0) {
+            speed -= 10;
+          }
+        }
+        else {
+          ateFood = false;
+        }
+      }
+
+    }
+
+    function moveSnake(event) {
+
+      let dx = 0;
+      let dy = 0;
+
+      if(snake.length > 0) {
+        if(snake[0].x < 0 || snake[0].y < 0 || snake[0].x > gameBoard.width || snake[0].y > gameBoard.height) {
+          endGame();
+        }
+      }
+
+      eatFood();
+
+      detectCollision();
+
+      switch(event.keyCode) {
+        case 37: //left
+          if(!dirs[1]) {
+            dx = -10;
+            dirs = [1,0,0,0];
+          }
+          else {
+            dx = 10;
+          }
+          break;
+        case 39: //right
+          if(!dirs[0]) {
+            dx = 10;
+            dirs = [0,1,0,0];
+          }
+          else {
+            dx = -10
+          }
+          break;
+        case 40: //down
+          if(!dirs[3]) {
+            dy = 10;
+            dirs = [0,0,1,0];
+          }
+          else {
+            dy = -10;
+          }
+          break;
+        case 38: //up
+          if(!dirs[2]) {
+            dy = -10;
+            dirs = [0,0,0,1];
+          }
+          else {
+            dy = 10;
+          }
+          break;
+        default:
+          return;
+      }
+
+      if(snake.length > 0) {
+        const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+        snake.unshift(head);
+        if(!ateFood) {
+          snake.pop();
+        }
+      }
+
+      clearTimers();
+
+      intervals = intervals.concat(setTimeout(moveSnake, speed, event));
+
+      clearCanvas();
+      drawSnake();
+
+    }
+
+    function endGame() {
+      document.getElementById('final-score').textContent = score;
+      gameBoard_ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
+      clearTimers();
+      snake = [];
+      score = 0;
+
+      $('#game-over-popup').css('visibility', 'visible');
+
+    }
+
+    function clearTimers() {
+      for(let x = 0; x < intervals.length; x++) {
+        clearTimeout(intervals[x]);
+      }
+    }
+
+    function clearCanvas() {
+      gameBoard_ctx.clearRect(0, 0, gameBoard.width, gameBoard.height);
+      redrawFood();
+    }
+
+  </script>
+</html>

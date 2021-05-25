@@ -1,0 +1,68 @@
+#playing-field {
+  margin-top: 3vh;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  outline: 3px solid black;
+  position: relative;
+}
+
+#score-area {
+  font-weight: bold;
+  font-size: 20px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100px;
+  margin-top: 3vh;
+}
+
+.block {
+  width: 10px;
+  height: 10px;
+
+}
+
+.snake {
+  background-color: black;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  white-space: pre;
+}
+
+.food {
+  background-color: red;
+  z-index: 3;
+}
+
+#game-over-popup {
+  visibility: visible;
+  position: fixed;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+}
+
+#game-over {
+  background-color: #fefefe;
+  margin: 15% auto;
+  padding: 20px;
+  border: 1px solid #888;
+  width: 40%;
+  height: 150px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+#reset-button {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
